@@ -1,0 +1,71 @@
+# ============================================
+# Core 核心模块 - 中文语言字符串
+# 通用翻译（所有模块共享）
+# ============================================
+
+# 通用操作消息
+MSG_INITIALIZING="初始化中..."
+MSG_INSTALLING="安装中..."
+MSG_UNINSTALLING="卸载中..."
+MSG_ENABLING="启用中..."
+MSG_DISABLING="禁用中..."
+MSG_CREATING="创建中..."
+MSG_DELETING="删除中..."
+MSG_COPYING="复制中..."
+MSG_LINKING="链接中..."
+MSG_RENDERING="渲染中..."
+
+# 通用成功消息
+MSG_INIT_SUCCESS="初始化完成"
+MSG_INSTALL_SUCCESS="安装完成"
+MSG_UNINSTALL_SUCCESS="卸载完成"
+MSG_ENABLE_SUCCESS="模块已启用"
+MSG_DISABLE_SUCCESS="模块已禁用"
+MSG_CREATE_SUCCESS="模块已创建"
+MSG_DELETE_SUCCESS="模块已删除"
+MSG_COPY_SUCCESS="文件已复制"
+MSG_LINK_SUCCESS="符号链接已创建"
+MSG_RENDER_SUCCESS="模板已渲染"
+
+# 通用错误消息
+MSG_ERROR_GENERAL="错误"
+MSG_ERROR_INVALID_COMMAND="无效的命令"
+MSG_ERROR_INVALID_SELECTION="无效的选择"
+MSG_ERROR_FILE_NOT_FOUND="文件未找到"
+MSG_ERROR_DIRECTORY_NOT_FOUND="目录未找到"
+MSG_ERROR_PERMISSION_DENIED="权限被拒绝"
+MSG_ERROR_NETWORK_FAILED="网络请求失败"
+
+# 通用警告消息
+MSG_WARN_ALREADY_INSTALLED="已经安装过"
+
+# 通用信息消息
+MSG_INFO_HELP="可用命令"
+
+# 通用 Help 文本
+HELP_HELP="显示帮助信息"
+HELP_INSTALL="安装模块"
+HELP_UNINSTALL="卸载模块"
+HELP_DEPENDENCIES="安装所有依赖"
+HELP_INIT="初始化项目"
+
+# 通用提示
+PROMPT_OVERWRITE="覆盖安装？"
+PROMPT_CONTINUE="继续？"
+
+# 操作取消消息
+MSG_ERROR_CANCELLED="安装已取消"
+MSG_ERROR_UNINSTALLATION_CANCELLED="卸载已取消"
+MSG_ERROR_ENABLING_CANCELLED="启用已取消"
+MSG_ERROR_DISABLING_CANCELLED="禁用已取消"
+
+# ============================================
+# Help 框架显示
+# ============================================
+HELP_FRAMEWORK_NAME="ModKit 1.0.0"
+HELP_USAGE="用法："
+HELP_USAGE_TEXT="make 命令 [选项]"
+HELP_AVAILABLE_COMMANDS="可用命令："
+HELP_CORE_COMMANDS="核心命令："
+HELP_ENABLED_MODULES="已启用的模块："
+HELP_NO_MODULES_ENABLED="（没有已启用的模块，使用 mod@enable 添加）"

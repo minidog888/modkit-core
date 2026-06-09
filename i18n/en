@@ -1,0 +1,71 @@
+# ============================================
+# Core Module - English language strings
+# General translations (shared by all modules)
+# ============================================
+
+# General operation messages
+MSG_INITIALIZING="Initializing..."
+MSG_INSTALLING="Installing..."
+MSG_UNINSTALLING="Uninstalling..."
+MSG_ENABLING="Enabling..."
+MSG_DISABLING="Disabling..."
+MSG_CREATING="Creating..."
+MSG_DELETING="Deleting..."
+MSG_COPYING="Copying..."
+MSG_LINKING="Linking..."
+MSG_RENDERING="Rendering..."
+
+# General success messages
+MSG_INIT_SUCCESS="Initialization completed"
+MSG_INSTALL_SUCCESS="Installation completed"
+MSG_UNINSTALL_SUCCESS="Uninstallation completed"
+MSG_ENABLE_SUCCESS="Module enabled"
+MSG_DISABLE_SUCCESS="Module disabled"
+MSG_CREATE_SUCCESS="Module created"
+MSG_DELETE_SUCCESS="Module deleted"
+MSG_COPY_SUCCESS="File copied"
+MSG_LINK_SUCCESS="Symlink created"
+MSG_RENDER_SUCCESS="Template rendered"
+
+# General error messages
+MSG_ERROR_GENERAL="Error"
+MSG_ERROR_INVALID_COMMAND="Invalid command"
+MSG_ERROR_INVALID_SELECTION="Invalid selection"
+MSG_ERROR_FILE_NOT_FOUND="File not found"
+MSG_ERROR_DIRECTORY_NOT_FOUND="Directory not found"
+MSG_ERROR_PERMISSION_DENIED="Permission denied"
+MSG_ERROR_NETWORK_FAILED="Network request failed"
+
+# General warning messages
+MSG_WARN_ALREADY_INSTALLED="Already installed"
+
+# General info messages
+MSG_INFO_HELP="Available commands"
+
+# General help text
+HELP_HELP="Show this help message"
+HELP_INSTALL="Install module"
+HELP_UNINSTALL="Uninstall module"
+HELP_DEPENDENCIES="Install all dependencies"
+HELP_INIT="Initialize project"
+
+# General prompts
+PROMPT_OVERWRITE="Overwrite installation?"
+PROMPT_CONTINUE="Continue?"
+
+# Operation cancelled messages
+MSG_ERROR_CANCELLED="Installation cancelled"
+MSG_ERROR_UNINSTALLATION_CANCELLED="Uninstallation cancelled"
+MSG_ERROR_ENABLING_CANCELLED="Enabling cancelled"
+MSG_ERROR_DISABLING_CANCELLED="Disabling cancelled"
+
+# ============================================
+# Help framework display
+# ============================================
+HELP_FRAMEWORK_NAME="ModKit 1.0.0"
+HELP_USAGE="Usage:"
+HELP_USAGE_TEXT="make command [options]"
+HELP_AVAILABLE_COMMANDS="Available commands:"
+HELP_CORE_COMMANDS="Core commands:"
+HELP_ENABLED_MODULES="Enabled modules:"
+HELP_NO_MODULES_ENABLED="(No modules enabled, use mod@enable to add)"

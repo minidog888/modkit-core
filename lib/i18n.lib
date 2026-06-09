@@ -1,0 +1,282 @@
+#!/bin/bash
+# ============================================
+# Internationalization library
+# Loads language strings based on configuration
+# ============================================
+
+# Prevent direct execution
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    echo "Error: This library cannot be executed directly."
+    echo "Usage: source ${BASH_SOURCE[0]}"
+    exit 1
+fi
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CORE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+I18N_DIR="${CORE_DIR}/i18n"
+
+# Default language
+DEFAULT_LANG="en"
+
+# Current language (can be overridden)
+CURRENT_LANG="${DEFAULT_LANG}"
+
+# Load language strings
+load_language() {
+    local lang="$1"
+    local lang_file="${I18N_DIR}/${lang}"
+    
+    if [[ -f "$lang_file" ]]; then
+        source "$lang_file"
+        CURRENT_LANG="$lang"
+        return 0
+    else
+        # Fallback to English
+        if [[ "$lang" != "$DEFAULT_LANG" ]]; then
+            load_language "$DEFAULT_LANG"
+        fi
+        return 1
+    fi
+}
+
+# Get language from config
+get_language_from_config() {
+    # 首先尝试从 core.ini 中读取 language 配置
+    if type source_config >/dev/null 2>&1; then
+        local temp_prefix="temp_i18n_"
+        source_config "core" "core.ini" "$temp_prefix" 2>/dev/null || true
+        local lang_var="${temp_prefix}language"
+        if [[ -n "${!lang_var:-}" ]]; then
+            echo "${!lang_var}"
+            return 0
+        fi
+    fi
+    
+    # 尝试从 modules.json 中读取（兼容旧版）
+    local config_file="${PROJECT_ROOT:-.}/modules.json"
+    if [[ -f "$config_file" ]]; then
+        if type parse_json_simple >/dev/null 2>&1; then
+            local lang=$(parse_json_simple "$config_file" "config.language")
+            if [[ -n "$lang" ]]; then
+                echo "$lang"
+                return 0
+            fi
+        fi
+    fi
+    
+    # 尝试从 mod.json 中读取
+    local mod_config_file="${PROJECT_ROOT:-.}/mod.json"
+    if [[ -f "$mod_config_file" ]]; then
+        if type parse_json_simple >/dev/null 2>&1; then
+            local lang=$(parse_json_simple "$mod_config_file" "config.language")
+            if [[ -n "$lang" ]]; then
+                echo "$lang"
+                return 0
+            fi
+        fi
+    fi
+    
+    echo "$DEFAULT_LANG"
+    return 1
+}
+
+# Initialize i18n
+i18n_init() {
+    # 使用统一的 get_language_from_config 函数获取语言
+    local lang=$(get_language_from_config)
+    load_language "$lang"
+}
+
+# Get a translated string
+t() {
+    local key_with_prefix="MSG_$1"
+    local key_without_prefix="$1"
+    local value=""
+    
+    # 首先尝试带 MSG_ 前缀的
+    if [ -n "${!key_with_prefix+x}" ]; then
+        value="${!key_with_prefix}"
+    fi
+    
+    # 如果没有找到，尝试不带前缀的
+    if [[ -z "$value" ]] && [ -n "${!key_without_prefix+x}" ]; then
+        value="${!key_without_prefix}"
+    fi
+    
+    if [[ -n "$value" ]]; then
+        echo "$value"
+    else
+        # Fallback to key name without prefix
+        echo "$1"
+    fi
+}
+
+# Quick translation functions
+# General
+msg_initializing() { echo "$(t 'INITIALIZING')"; }
+msg_installing() { echo "$(t 'INSTALLING')"; }
+msg_uninstalling() { echo "$(t 'UNINSTALLING')"; }
+msg_enabling() { echo "$(t 'ENABLING')"; }
+msg_disabling() { echo "$(t 'DISABLING')"; }
+msg_creating() { echo "$(t 'CREATING')"; }
+msg_deleting() { echo "$(t 'DELETING')"; }
+msg_copying() { echo "$(t 'COPYING')"; }
+msg_linking() { echo "$(t 'LINKING')"; }
+msg_rendering() { echo "$(t 'RENDERING')"; }
+
+# Success
+msg_init_success() { echo "$(t 'INIT_SUCCESS')"; }
+msg_install_success() { echo "$(t 'INSTALL_SUCCESS')"; }
+msg_uninstall_success() { echo "$(t 'UNINSTALL_SUCCESS')"; }
+msg_enable_success() { echo "$(t 'ENABLE_SUCCESS')"; }
+msg_disable_success() { echo "$(t 'DISABLE_SUCCESS')"; }
+msg_create_success() { echo "$(t 'CREATE_SUCCESS')"; }
+msg_delete_success() { echo "$(t 'DELETE_SUCCESS')"; }
+msg_copy_success() { echo "$(t 'COPY_SUCCESS')"; }
+msg_link_success() { echo "$(t 'LINK_SUCCESS')"; }
+msg_render_success() { echo "$(t 'RENDER_SUCCESS')"; }
+
+# Error
+msg_error_general() { echo "$(t 'ERROR_GENERAL')"; }
+msg_error_module_not_found() { echo "$(t 'ERROR_MODULE_NOT_FOUND')"; }
+msg_error_module_not_installed() { echo "$(t 'ERROR_MODULE_NOT_INSTALLED')"; }
+msg_error_module_already_exists() { echo "$(t 'ERROR_MODULE_ALREADY_EXISTS')"; }
+msg_error_module_already_enabled() { echo "$(t 'ERROR_MODULE_ALREADY_ENABLED')"; }
+msg_error_cannot_uninstall_core() { echo "$(t 'ERROR_CANNOT_UNINSTALL_CORE')"; }
+msg_error_parent_not_found() { echo "$(t 'ERROR_PARENT_NOT_FOUND')"; }
+msg_error_unsupported_source_type() { echo "$(t 'ERROR_UNSUPPORTED_SOURCE_TYPE')"; }
+msg_error_invalid_command() { echo "$(t 'ERROR_INVALID_COMMAND')"; }
+msg_error_file_not_found() { echo "$(t 'ERROR_FILE_NOT_FOUND')"; }
+msg_error_directory_not_found() { echo "$(t 'ERROR_DIRECTORY_NOT_FOUND')"; }
+msg_error_permission_denied() { echo "$(t 'ERROR_PERMISSION_DENIED')"; }
+msg_error_network_failed() { echo "$(t 'ERROR_NETWORK_FAILED')"; }
+
+# Warning
+msg_warn_module_already_enabled() { echo "$(t 'WARN_MODULE_ALREADY_ENABLED')"; }
+msg_warn_module_not_installed() { echo "$(t 'WARN_MODULE_NOT_INSTALLED')"; }
+msg_warn_core_always_enabled() { echo "$(t 'WARN_CORE_ALWAYS_ENABLED')"; }
+
+# Info
+msg_info_module_list() { echo "$(t 'INFO_MODULE_LIST')"; }
+msg_info_module_info() { echo "$(t 'INFO_MODULE_INFO')"; }
+msg_info_help() { echo "$(t 'INFO_HELP')"; }
+msg_info_dependencies() { echo "$(t 'INFO_DEPENDENCIES')"; }
+msg_info_files() { echo "$(t 'INFO_FILES')"; }
+msg_info_commands() { echo "$(t 'INFO_COMMANDS')"; }
+msg_info_creating_directory() { echo "$(t 'INFO_CREATING_DIRECTORY')"; }
+msg_info_initializing_project() { echo "$(t 'INFO_INITIALIZING_PROJECT')"; }
+msg_info_project_init_complete() { echo "$(t 'INFO_PROJECT_INIT_COMPLETE')"; }
+
+# Help
+help_list() { echo "$(t 'HELP_LIST')"; }
+help_info() { echo "$(t 'HELP_INFO')"; }
+help_create() { echo "$(t 'HELP_CREATE')"; }
+help_enable() { echo "$(t 'HELP_ENABLE')"; }
+help_disable() { echo "$(t 'HELP_DISABLE')"; }
+help_install() { echo "$(t 'HELP_INSTALL')"; }
+help_uninstall() { echo "$(t 'HELP_UNINSTALL')"; }
+help_add() { echo "$(t 'HELP_ADD')"; }
+help_remove() { echo "$(t 'HELP_REMOVE')"; }
+help_dependencies() { echo "$(t 'HELP_DEPENDENCIES')"; }
+help_init() { echo "$(t 'HELP_INIT')"; }
+help_help() { echo "$(t 'HELP_HELP')"; }
+help_publish() { echo "$(t 'HELP_PUBLISH')"; }
+
+# Status
+status_installed() { echo "$(t 'STATUS_INSTALLED')"; }
+status_enabled() { echo "$(t 'STATUS_ENABLED')"; }
+status_disabled() { echo "$(t 'STATUS_DISABLED')"; }
+status_not_installed() { echo "$(t 'STATUS_NOT_INSTALLED')"; }
+
+# Table headers
+header_name() { echo "$(t 'HEADER_NAME')"; }
+header_version() { echo "$(t 'HEADER_VERSION')"; }
+header_description() { echo "$(t 'HEADER_DESCRIPTION')"; }
+header_status() { echo "$(t 'HEADER_STATUS')"; }
+
+# Prompts
+prompt_overwrite() { echo "$(t 'PROMPT_OVERWRITE')"; }
+prompt_continue() { echo "$(t 'PROMPT_CONTINUE')"; }
+
+# Module types
+type_core() { echo "$(t 'TYPE_CORE')"; }
+type_dependency() { echo "$(t 'TYPE_DEPENDENCY')"; }
+type_optional() { echo "$(t 'TYPE_OPTIONAL')"; }
+
+# Export functions for use in other scripts
+export -f load_language
+export -f get_language_from_config
+export -f i18n_init
+export -f t
+export -f msg_initializing
+export -f msg_installing
+export -f msg_uninstalling
+export -f msg_enabling
+export -f msg_disabling
+export -f msg_creating
+export -f msg_deleting
+export -f msg_copying
+export -f msg_linking
+export -f msg_rendering
+export -f msg_init_success
+export -f msg_install_success
+export -f msg_uninstall_success
+export -f msg_enable_success
+export -f msg_disable_success
+export -f msg_create_success
+export -f msg_delete_success
+export -f msg_copy_success
+export -f msg_link_success
+export -f msg_render_success
+export -f msg_error_general
+export -f msg_error_module_not_found
+export -f msg_error_module_not_installed
+export -f msg_error_module_already_exists
+export -f msg_error_module_already_enabled
+export -f msg_error_cannot_uninstall_core
+export -f msg_error_parent_not_found
+export -f msg_error_unsupported_source_type
+export -f msg_error_invalid_command
+export -f msg_error_file_not_found
+export -f msg_error_directory_not_found
+export -f msg_error_permission_denied
+export -f msg_error_network_failed
+export -f msg_warn_module_already_enabled
+export -f msg_warn_module_not_installed
+export -f msg_warn_core_always_enabled
+export -f msg_info_module_list
+export -f msg_info_module_info
+export -f msg_info_help
+export -f msg_info_dependencies
+export -f msg_info_files
+export -f msg_info_commands
+export -f msg_info_creating_directory
+export -f msg_info_initializing_project
+export -f msg_info_project_init_complete
+export -f help_list
+export -f help_info
+export -f help_create
+export -f help_enable
+export -f help_disable
+export -f help_install
+export -f help_uninstall
+export -f help_add
+export -f help_remove
+export -f help_dependencies
+export -f help_init
+export -f help_help
+export -f help_publish
+export -f status_installed
+export -f status_enabled
+export -f status_disabled
+export -f status_not_installed
+export -f header_name
+export -f header_version
+export -f header_description
+export -f header_status
+export -f prompt_overwrite
+export -f prompt_continue
+export -f type_core
+export -f type_dependency
+export -f type_optional

@@ -1,0 +1,98 @@
+#!/bin/bash
+# ============================================
+# Module Help Display Script
+# Displays module help with i18n support
+# ============================================
+
+set -uo pipefail
+
+# MODKIT_ROOT = 工具自身目录；PROJECT_ROOT = 用户项目目录
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODKIT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
+
+MODULES_DIR="$PROJECT_ROOT/modules"
+
+# Load core libraries
+LIB_DIR="$MODKIT_ROOT/lib"
+source "$LIB_DIR/core.lib"
+i18n_init
+
+# Load module-specific i18n
+load_module_i18n() {
+    local module_name="$1"
+    local module_dir="$MODULES_DIR/$module_name"
+    local i18n_dir="$module_dir/i18n"
+    
+    if [ -d "$i18n_dir" ]; then
+        local lang=$(get_language_from_config)
+        local lang_file="$i18n_dir/$lang"
+        
+        if [ -f "$lang_file" ]; then
+            source "$lang_file"
+            return 0
+        fi
+        
+        # Fallback to English
+        if [ "$lang" != "en" ] && [ -f "$i18n_dir/en" ]; then
+            source "$i18n_dir/en"
+            return 0
+        fi
+    fi
+    
+    return 1
+}
+
+# Display module help
+display_help() {
+    local module_name="$1"
+    local module_dir="$MODULES_DIR/$module_name"
+    
+    # Load module i18n
+    load_module_i18n "$module_name"
+    
+    # Display help
+    echo ""
+    echo -e "${YELLOW}$module_name module commands:${NC}"
+    
+    # Check if module has help function defined or use default
+    if type -t "help_${module_name//-/_}" 2>/dev/null | grep -q "function"; then
+        "help_${module_name//-/_}"
+    else
+        # Default help display based on module.mk
+        if [ -f "$module_dir/module.mk" ]; then
+            # Extract help from module.mk
+            local help_lines=$(grep -E '^[^#].*##' "$module_dir/module.mk" | grep -v "^help-")
+            while IFS= read -r line; do
+                if [ -n "$line" ]; then
+                    local cmd=$(echo "$line" | cut -d: -f1 | sed 's/^ *//' | sed 's/ *$//')
+                    local desc=$(echo "$line" | cut -d: -f2- | cut -d# -f3- | sed 's/^ *//' | sed 's/ *$//')
+                    if [ -n "$cmd" ] && [ -n "$desc" ]; then
+                        echo -e "  ${GREEN}$(printf "%-25s" "$cmd")${NC} $desc"
+                    fi
+                fi
+            done <<< "$help_lines"
+        fi
+    fi
+    
+    echo ""
+}
+
+# Main function
+main() {
+    local module_name="$1"
+    
+    if [ -z "$module_name" ]; then
+        echo "Usage: $0 module-name"
+        exit 1
+    fi
+    
+    if [ ! -d "$MODULES_DIR/$module_name" ]; then
+        echo "Error: Module $module_name not found"
+        exit 1
+    fi
+    
+    display_help "$module_name"
+}
+
+main "$@"

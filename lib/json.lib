@@ -1,0 +1,164 @@
+# ============================================
+# JSON Parser Library for Shell
+# ============================================
+# Provides functions to parse JSON files in pure shell
+# Using Python's json module for reliable parsing
+# ============================================
+
+parse_json_simple() {
+    local file="$1"
+    local key="$2"
+    
+    if [ ! -f "$file" ]; then
+        echo ""
+        return
+    fi
+    
+    python3 -c "
+import json
+import sys
+try:
+    with open('$file', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    keys = '$key'.split('.')
+    result = data
+    for k in keys:
+        if isinstance(result, dict) and k in result:
+            result = result[k]
+        else:
+            print('')
+            sys.exit(0)
+    if isinstance(result, str):
+        print(result)
+    elif isinstance(result, (int, float)):
+        print(str(result))
+    elif isinstance(result, bool):
+        print(str(result).lower())
+    else:
+        print('')
+except Exception as e:
+    print('')
+" 2>/dev/null
+}
+
+parse_json_list() {
+    local file="$1"
+    local key="$2"
+    
+    if [ ! -f "$file" ]; then
+        echo ""
+        return
+    fi
+    
+    python3 -c "
+import json
+import sys
+try:
+    with open('$file', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    keys = '$key'.split('.')
+    result = data
+    for k in keys:
+        if isinstance(result, dict) and k in result:
+            result = result[k]
+        else:
+            print('')
+            sys.exit(0)
+    if isinstance(result, list):
+        for item in result:
+            if isinstance(item, str):
+                print(item)
+            elif isinstance(item, dict):
+                # If it's a dict, convert to key=value pairs
+                for k, v in item.items():
+                    print(f'{k}={v}')
+except Exception as e:
+    print('')
+" 2>/dev/null
+}
+
+parse_json_dict() {
+    local file="$1"
+    local key="$2"
+    
+    if [ ! -f "$file" ]; then
+        echo ""
+        return
+    fi
+    
+    python3 -c "
+import json
+import sys
+try:
+    with open('$file', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    keys = '$key'.split('.')
+    result = data
+    for k in keys:
+        if isinstance(result, dict) and k in result:
+            result = result[k]
+        else:
+            print('')
+            sys.exit(0)
+    if isinstance(result, dict):
+        for k, v in result.items():
+            if isinstance(v, str):
+                print(f'{k}={v}')
+            elif isinstance(v, (int, float)):
+                print(f'{k}={v}')
+            elif isinstance(v, bool):
+                print(f'{k}={str(v).lower()}')
+except Exception as e:
+    print('')
+" 2>/dev/null
+}
+
+get_json_keys() {
+    local file="$1"
+    local key="$2"
+    
+    if [ ! -f "$file" ]; then
+        echo ""
+        return
+    fi
+    
+    python3 -c "
+import json
+import sys
+try:
+    with open('$file', 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    if '$key':
+        keys = '$key'.split('.')
+        result = data
+        for k in keys:
+            if isinstance(result, dict) and k in result:
+                result = result[k]
+            else:
+                print('')
+                sys.exit(0)
+    else:
+        result = data
+    if isinstance(result, dict):
+        for k in result.keys():
+            print(k)
+except Exception as e:
+    print('')
+" 2>/dev/null
+}
+
+json_exists() {
+    local file="$1"
+    local key="$2"
+    
+    if [ ! -f "$file" ]; then
+        return 1
+    fi
+    
+    local value=$(parse_json_simple "$file" "$key")
+    if [ -n "$value" ]; then
+        return 0
+    else
+        return 1
+    fi
+}

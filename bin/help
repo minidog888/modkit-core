@@ -1,0 +1,93 @@
+#!/bin/bash
+# ============================================
+# Help Display Script
+# Composer-style design
+# ============================================
+
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
+MODULES_DIR="$PROJECT_ROOT/modules"
+
+# Load core libraries - core.lib will set MODKIT_ROOT and LIB_DIR
+LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
+source "$LIB_DIR/core.lib"
+source "$LIB_DIR/config.lib"
+i18n_init
+
+# Load core configuration
+source_config "core" "core.ini"
+
+# Get project name from config, default to "Project"
+PROJECT_NAME="${core_name:-Project}"
+
+# Read project version from mod.json
+PROJECT_VERSION="1.0.0"
+if [ -f "$PROJECT_ROOT/mod.json" ]; then
+    pv=$(grep '"version"' "$PROJECT_ROOT/mod.json" 2>/dev/null | head -1 | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')
+    [ -n "$pv" ] && PROJECT_VERSION="$pv"
+fi
+
+# Get enabled modules
+get_enabled_modules() {
+    local modules_config="$PROJECT_ROOT/modules.mk"
+    if [ ! -f "$modules_config" ]; then
+        echo ""
+        return
+    fi
+    grep "^ENABLE_MODULES := " "$modules_config" 2>/dev/null | cut -d= -f2- | sed -e 's/^ *//' -e 's/ *$//' || echo ""
+}
+
+# Composer-style print helper
+print_cmd() {
+    local name="$1"
+    local desc="$2"
+    printf "  ${GREEN}%-16s${NC} %s\n" "$name" "$desc"
+}
+
+# Main function
+main() {
+    echo ""
+    echo "${GREEN}${PROJECT_NAME}${NC}  ${YELLOW}ModKit ${PROJECT_VERSION}${NC}"
+    echo ""
+
+    echo "${YELLOW}$(t 'HELP_USAGE')${NC}"
+    echo "  $(t 'HELP_USAGE_TEXT')"
+    echo ""
+
+    echo "${YELLOW}$(t 'HELP_AVAILABLE_COMMANDS')${NC}"
+    echo ""
+
+    echo "${YELLOW}$(t 'HELP_CORE_COMMANDS')${NC}"
+    print_cmd "help" "$(t 'HELP_HELP')"
+    print_cmd "install" "$(t 'HELP_INSTALL')"
+    echo ""
+
+    local enabled_modules
+    enabled_modules=$(get_enabled_modules)
+
+    # 从配置读取是否显示已启用的模块列表，默认显示
+    local show_enabled="${core_show_enabled_modules:-true}"
+
+    if [[ "$show_enabled" == "true" ]] && [ -n "$enabled_modules" ] && [ "$enabled_modules" != " " ]; then
+        echo "${YELLOW}$(t 'HELP_ENABLED_MODULES')${NC}"
+        for module in $enabled_modules; do
+            echo "  ${GREEN}✓ $module${NC}"
+        done
+        echo ""
+    fi
+
+    # Display help for enabled modules
+    if [ -n "$enabled_modules" ] && [ "$enabled_modules" != " " ]; then
+        for module in $enabled_modules; do
+            if [ -f "$MODULES_DIR/$module/module.mk" ]; then
+                make -s "help-$module" 2>/dev/null || true
+            fi
+        done
+    fi
+
+    echo ""
+}
+
+main

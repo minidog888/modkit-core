@@ -1,0 +1,267 @@
+#!/bin/bash
+# ============================================
+# Config Loader Library
+# Smart config file loading with priority
+# Priority: .env > project config > module config
+# ============================================
+
+# Prevent direct execution
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    echo "Error: This library cannot be executed directly."
+    echo "Usage: source ${BASH_SOURCE[0]}"
+    exit 1
+fi
+
+# ============================================
+# Load and source .env file
+# ============================================
+load_dotenv() {
+    local root_dir="${PROJECT_ROOT:-$(pwd)}"
+    local env_file="$root_dir/.env"
+    
+    if [ -f "$env_file" ]; then
+        # Load .env file, skip comments
+        while IFS= read -r line; do
+            if [[ "$line" =~ ^[[:space:]]*$ ]] || [[ "$line" =~ ^[[:space:]]*# ]]; then
+                continue
+            fi
+            if [[ "$line" == *=* ]]; then
+                export "$line"
+            fi
+        done < "$env_file"
+        return 0
+    fi
+    return 1
+}
+
+# ============================================
+# Parse INI file into shell variables
+# Priority: .env > project config > module config
+# ============================================
+parse_ini() {
+    local ini_file="$1"
+    local prefix="$2"
+    
+    if [ ! -f "$ini_file" ]; then
+        return 1
+    fi
+    
+    local current_section=""
+    local var_content=""
+    
+    # Read all content
+    var_content=$(cat "$ini_file")
+    
+    # Use newline as separator
+    local IFS_OLD="$IFS"
+    IFS=$'\n'
+    
+    # Loop through each line
+    for line in $var_content; do
+        IFS="$IFS_OLD"
+        
+        # Trim whitespace
+        line=$(echo "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        
+        # Skip empty lines and comments
+        if [[ "$line" =~ ^$ ]] || [[ "$line" =~ ^# ]]; then
+            continue
+        fi
+        
+        # Section header
+        if [[ "$line" =~ ^\[.*\]$ ]]; then
+            current_section=$(echo "$line" | sed -e 's/^\[//' -e 's/\]$//')
+            continue
+        fi
+        
+        # Key=value pair
+        if [[ "$line" == *=* ]]; then
+            key=$(echo "$line" | cut -d= -f1 | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            value=$(echo "$line" | cut -d= -f2- | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^["'\'']//' -e 's/["'\'']$//')
+            
+            # Create variable name with prefix and section
+            if [ -n "$current_section" ]; then
+                var_name="${prefix}${current_section}_${key}"
+            else
+                var_name="${prefix}${key}"
+            fi
+            
+            # Priority check: 
+            # 1. If ENV variable exists (all uppercase), use it (highest priority)
+            # 2. If config variable already set, keep it (from previous config)
+            # 3. Otherwise use value from config file
+            # This ensures: .env > project config > module config
+            # Example: .env has CORE_NAME=Admin, config has name="Package Manager"
+            # We should use CORE_NAME value and set core_name=Admin
+            local env_var_name=$(echo "$var_name" | tr 'a-z_' 'A-Z_')
+            local env_value="${!env_var_name:-}"
+            
+            if [ -n "$env_value" ]; then
+                # ENV variable exists - use it (highest priority)
+                eval "export $var_name='$env_value'"
+            elif [ -z "${!var_name:-}" ]; then
+                # Config variable not set - use config file value
+                eval "export $var_name='$value'"
+            fi
+            # else: config variable already set, keep it
+        fi
+    done
+    
+    IFS="$IFS_OLD"
+    return 0
+}
+
+# ============================================
+# Load configuration file with priority
+# ============================================
+# Usage: load_config <module_name> <config_file>
+# 
+# Priority:
+# 1. $PROJECT_ROOT/.env
+# 2. $PROJECT_ROOT/config/<module_name>/<config_file>
+# 3. $PROJECT_ROOT/modules/<module_name>/config/<config_file>
+# ============================================
+load_config() {
+    local module_name="$1"
+    local config_file="$2"
+    
+    if [ -z "$module_name" ] || [ -z "$config_file" ]; then
+        echo "Usage: load_config <module_name> <config_file>"
+        return 1
+    fi
+    
+    # Ensure PROJECT_ROOT is set
+    local root_dir="${PROJECT_ROOT:-$(pwd)}"
+    
+    # Priority 1: Project config directory
+    local project_config="$root_dir/config/$module_name/$config_file"
+    if [ -f "$project_config" ]; then
+        echo "$project_config"
+        return 0
+    fi
+    
+    # Priority 2: Module config directory
+    local module_config="$root_dir/modules/$module_name/config/$config_file"
+    if [ -f "$module_config" ]; then
+        echo "$module_config"
+        return 0
+    fi
+    
+    # Not found
+    return 1
+}
+
+# ============================================
+# Load and source configuration file
+# ============================================
+# Usage: source_config <module_name> <config_file> [prefix]
+# 
+# Priority:
+# 1. .env file (highest priority)
+# 2. Project config directory: $PROJECT_ROOT/config/<module_name>/<config_file>
+# 3. Module config directory: $PROJECT_ROOT/modules/<module_name>/config/<config_file> (lowest priority)
+# ============================================
+source_config() {
+    local module_name="$1"
+    local config_file="$2"
+    local prefix="${3:-}"
+    
+    # Load .env first (highest priority)
+    load_dotenv
+    
+    # If prefix not provided, use module_name as default prefix
+    if [ -z "$prefix" ]; then
+        prefix="${module_name}_"
+    fi
+    
+    local root_dir="${PROJECT_ROOT:-$(pwd)}"
+    
+    # Priority 2: Project config directory
+    local project_config="$root_dir/config/$module_name/$config_file"
+    if [ -f "$project_config" ]; then
+        if [[ "$config_file" == *.ini ]]; then
+            parse_ini "$project_config" "$prefix"
+        else
+            source "$project_config"
+        fi
+    fi
+    
+    # Priority 3: Module config directory (only load if not already set)
+    local module_config="$root_dir/modules/$module_name/config/$config_file"
+    if [ -f "$module_config" ]; then
+        if [[ "$config_file" == *.ini ]]; then
+            parse_ini "$module_config" "$prefix"
+        else
+            source "$module_config"
+        fi
+    fi
+    
+    # Return success if at least one config file exists
+    if [ -f "$project_config" ] || [ -f "$module_config" ]; then
+        return 0
+    fi
+    return 1
+}
+
+# ============================================
+# Check if config exists
+# ============================================
+# Usage: config_exists <module_name> <config_file>
+# ============================================
+config_exists() {
+    local config_path=$(load_config "$1" "$2")
+    if [ $? -eq 0 ]; then
+        return 0
+    fi
+    return 1
+}
+
+# ============================================
+# Get all config files from a module
+# ============================================
+# Usage: get_module_configs <module_name>
+# ============================================
+get_module_configs() {
+    local module_name="$1"
+    
+    if [ -z "$module_name" ]; then
+        echo "Usage: get_module_configs <module_name>"
+        return 1
+    fi
+    
+    local root_dir="${PROJECT_ROOT:-$(pwd)}"
+    
+    # Get configs from project directory (priority)
+    local project_config_dir="$root_dir/config/$module_name"
+    if [ -d "$project_config_dir" ]; then
+        for config_file in "$project_config_dir"/*; do
+            if [ -f "$config_file" ]; then
+                echo "project:$(basename "$config_file")"
+            fi
+        done
+    fi
+    
+    # Get configs from module directory (fallback)
+    local module_config_dir="$root_dir/modules/$module_name/config"
+    if [ -d "$module_config_dir" ]; then
+        for config_file in "$module_config_dir"/*; do
+            if [ -f "$config_file" ]; then
+                local filename=$(basename "$config_file")
+                # Only show if not already in project config
+                if [ ! -f "$project_config_dir/$filename" ]; then
+                    echo "module:$filename"
+                fi
+            fi
+        done
+    fi
+}
+
+# ============================================
+# Export functions
+# ============================================
+export -f load_dotenv
+export -f parse_ini
+export -f load_config
+export -f source_config
+export -f config_exists
+export -f get_module_configs

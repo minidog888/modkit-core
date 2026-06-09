@@ -1,0 +1,17 @@
+{
+  "name": "core",
+  "version": "1.0.0",
+  "description": "CoreModule - provides basic features and module management",
+  "author": "modkit",
+  "maintainers": [
+    "Modkit Team <team@modkit.com>"
+  ],
+  "keywords": [
+    "core"
+  ],
+  "depends": [],
+  "devDepends": [],
+  "optionalDepends": [],
+  "directories": [],
+  "dataDirectories": []
+}

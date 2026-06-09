@@ -1,0 +1,110 @@
+#!/bin/bash
+# ============================================
+# Core Library Loader
+# Load all core libraries with one line
+# ============================================
+
+# Prevent direct execution
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    echo "Error: This library cannot be executed directly."
+    echo "Usage: source ${BASH_SOURCE[0]}"
+    exit 1
+fi
+
+# MODKIT_ROOT = modkit 工具自身安装目录（不变）
+# PROJECT_ROOT = 用户项目目录（默认为当前工作目录）
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODKIT_ROOT="${MODKIT_ROOT:-$(cd "$LIB_DIR/../.." && pwd)}"
+PROJECT_ROOT="${PROJECT_ROOT:-$(pwd)}"
+
+# Load libraries
+source "$LIB_DIR/colors.lib"
+source "$LIB_DIR/json.lib"
+source "$LIB_DIR/config.lib"
+source "$LIB_DIR/i18n.lib"
+
+# Export variables
+export LIB_DIR
+export MODKIT_ROOT
+export PROJECT_ROOT
+
+# Load .env file automatically when core.lib is sourced
+# This ensures environment variables are available before any config is loaded
+load_dotenv || true
+
+# ============================================
+# Helper: Check if library is loaded
+# ============================================
+is_lib_loaded() {
+    local lib_name="$1"
+    case "$lib_name" in
+        colors)
+            type log_info >/dev/null 2>&1 && return 0 || return 1
+            ;;
+        json)
+            type parse_json_simple >/dev/null 2>&1 && return 0 || return 1
+            ;;
+        config)
+            type load_config >/dev/null 2>&1 && return 0 || return 1
+            ;;
+        i18n)
+            type t >/dev/null 2>&1 && return 0 || return 1
+            ;;
+        *)
+            return 2
+            ;;
+    esac
+}
+
+# ============================================
+# Helper: Load all or specific libraries
+# ============================================
+load_core_libs() {
+    local libs="$1"
+    
+    if [ -z "$libs" ] || [ "$libs" = "all" ]; then
+        source "$LIB_DIR/colors.lib"
+        source "$LIB_DIR/json.lib"
+        source "$LIB_DIR/config.lib"
+        source "$LIB_DIR/i18n.lib"
+    else
+        for lib in $libs; do
+            case "$lib" in
+                colors)
+                    source "$LIB_DIR/colors.lib"
+                    ;;
+                json)
+                    source "$LIB_DIR/json.lib"
+                    ;;
+                config)
+                    source "$LIB_DIR/config.lib"
+                    ;;
+                i18n)
+                    source "$LIB_DIR/i18n.lib"
+                    ;;
+            esac
+        done
+    fi
+}
+
+export -f is_lib_loaded
+export -f load_core_libs
+
+# Usage info if called directly
+if [ "${BASH_SOURCE[0]}" == "${0}" ]; then
+    echo "Core Library Loader"
+    echo ""
+    echo "Usage:"
+    echo "  source ${BASH_SOURCE[0]} [libs]"
+    echo ""
+    echo "Libraries available:"
+echo "  colors   - Color output and logging"
+echo "  json     - JSON parsing utilities"
+echo "  config   - Config file loader with priority"
+echo "  i18n     - Internationalization (i18n)"
+echo "  all      - Load all libraries (default)"
+echo ""
+echo "Example:"
+echo "  source modules/core/lib/core.lib"
+echo "  source modules/core/lib/core.lib \"colors json config\""
+fi
