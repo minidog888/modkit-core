@@ -44,7 +44,6 @@ MSG_INFO_HELP="可用命令"
 
 # 通用 Help 文本
 HELP_HELP="显示帮助信息"
-HELP_INSTALL="安装模块"
 HELP_UNINSTALL="卸载模块"
 HELP_DEPENDENCIES="安装所有依赖"
 HELP_INIT="初始化项目"

@@ -44,7 +44,6 @@ MSG_INFO_HELP="Available commands"
 
 # General help text
 HELP_HELP="Show this help message"
-HELP_INSTALL="Install module"
 HELP_UNINSTALL="Uninstall module"
 HELP_DEPENDENCIES="Install all dependencies"
 HELP_INIT="Initialize project"

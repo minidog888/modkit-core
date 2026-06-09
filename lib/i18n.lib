@@ -174,7 +174,6 @@ help_info() { echo "$(t 'HELP_INFO')"; }
 help_create() { echo "$(t 'HELP_CREATE')"; }
 help_enable() { echo "$(t 'HELP_ENABLE')"; }
 help_disable() { echo "$(t 'HELP_DISABLE')"; }
-help_install() { echo "$(t 'HELP_INSTALL')"; }
 help_uninstall() { echo "$(t 'HELP_UNINSTALL')"; }
 help_add() { echo "$(t 'HELP_ADD')"; }
 help_remove() { echo "$(t 'HELP_REMOVE')"; }
@@ -259,7 +258,6 @@ export -f help_info
 export -f help_create
 export -f help_enable
 export -f help_disable
-export -f help_install
 export -f help_uninstall
 export -f help_add
 export -f help_remove

@@ -2,16 +2,42 @@
   "name": "core",
   "version": "1.0.0",
   "description": "CoreModule - provides basic features and module management",
-  "author": "modkit",
+  "author": "Your Name",
   "maintainers": [
-    "Modkit Team <team@modkit.com>"
+    "Your Name <your.email@example.com>"
   ],
   "keywords": [
-    "core"
+    "core",
+    "base",
+    "module-manager"
   ],
   "depends": [],
   "devDepends": [],
   "optionalDepends": [],
+  "commands": {
+    "help": "Show help information",
+    "install": "Initialize and install all dependencies"
+  },
+  "files": [
+    {
+      "source": "config/modules.mk.example",
+      "target": "modules.mk",
+      "type": "copy",
+      "description": "ModuleConfiguration file"
+    }
+  ],
   "directories": [],
-  "dataDirectories": []
+  "dataDirectories": [],
+  "aliases": {
+    "@core": "./modules/core",
+    "@bin": "./modules/core/bin",
+    "@config": "./config",
+    "@modules": "./modules"
+  },
+  "env": {
+    "MODULE_CORE_BIN": "./modules/core/bin"
+  },
+  "config": {
+    "registry_url": ""
+  }
 }

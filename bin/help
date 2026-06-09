@@ -61,7 +61,6 @@ main() {
 
     echo "${YELLOW}$(t 'HELP_CORE_COMMANDS')${NC}"
     print_cmd "help" "$(t 'HELP_HELP')"
-    print_cmd "install" "$(t 'HELP_INSTALL')"
     echo ""
 
     local enabled_modules
