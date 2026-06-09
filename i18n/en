@@ -63,7 +63,7 @@ MSG_ERROR_DISABLING_CANCELLED="Disabling cancelled"
 # ============================================
 HELP_FRAMEWORK_NAME="ModKit 1.0.0"
 HELP_USAGE="Usage:"
-HELP_USAGE_TEXT="make command [options]"
+HELP_USAGE_TEXT="command [options]"
 HELP_AVAILABLE_COMMANDS="Available commands:"
 HELP_CORE_COMMANDS="Core commands:"
 HELP_ENABLED_MODULES="Enabled modules:"
