@@ -2,71 +2,76 @@
 
 This is the system core module, always loaded and cannot be disabled.
 
-## Feature
+## Features
 
-### CoreCommand
-- `make install`：Initializeand install all dependencies
-- `make help`：ShowHelp information
+### Core Commands
+- `make help`：Display help information
+- `make build`：Package project into a single executable script
+- `make create name=<module-name>`：Create a new module
+- `make create-project name=<project-name>`：Create a new project from package
+- `make install`：Initialize and install all dependencies
+- `make list`：List all installed modules
+- `make info name=<module>`：Show module information
+- `make enable name=<module>`：Enable a module
+- `make disable name=<module>`：Disable a module
+- `make mod-install name=<module> source=<url>`：Install a module from source
 
-### Module management commands
-- `make mod@list`：List all installed modules
-- `make mod@info name=<module>`：Show module details
-- `make mod@add name=<module> [source=<url>]`：AddModule
-- `make mod@remove name=<module>`：RemoveModule
-- `make mod@enable name=<module>`：EnableModule
-- `make mod@disable name=<module>`：DisableModule
-- `make mod@create name=<module> [parent=<parent>]`：Create new module
+### Module Management
+- `make dependencies`：Enable all dependencies from mod.json
+- `make dev-dependencies`：Enable development dependencies
+- `make install-deps`：Install dependencies from registry
+- `make publish name=<module>`：Publish module configuration
 
-## Directory structure
+## Directory Structure
 
 ```
-core/
-├── module.yaml          # Module metadata
-├── module.mk            # Makefile module definition
+modkit-core/
 ├── bin/                 # Executable scripts
-│   ├── init            # Initialize script
-│   ├── install         # Install script
-│   ├── help            # Help script
-│   └── mod             # Module manager script
-├── lib/                 # Library files
-├── i18n/                # Internationalization files
-│   ├── zh              # Chinese language strings
-│   └── en              # English language strings
+│   ├── help             # Help display script
+│   └── module-help      # Module help script
 ├── config/              # Module configuration
-│   └── core.yaml       # Core module configuration
-└── README.md            # Module documentation
+│   └── core.ini         # Core module configuration
+├── i18n/                # Internationalization files
+│   ├── en               # English language strings
+│   └── zh               # Chinese language strings
+├── lib/                 # Library files
+│   ├── colors.lib       # Color and logging utilities
+│   ├── config.lib       # Configuration loading utilities
+│   ├── core.lib         # Core utilities
+│   ├── i18n.lib         # Internationalization utilities
+│   ├── json.lib         # JSON parsing utilities
+│   ├── makefile-helpers.mk  # Makefile helper functions
+│   └── makefile.lib     # Makefile utilities
+├── LICENSE              # License file
+├── mod.json             # Module metadata
+├── module.mk            # Makefile module definition
+├── README.md            # Module documentation (English)
+└── README_zh.md        # Module documentation (Chinese)
 ```
 
-## usesExample
+## Quick Start
 
-### InitializeSystem
+### Display Help
 
 ```bash
-make init
+make help
 ```
 
-### Create new module
+### Create a New Module
 
 ```bash
-# Create top-level module
-make mod@create name=my-module
-
-# Create submodule
-make mod@create name=my-sub-module parent=my-module
+make create name=my-module
 ```
 
-### Manage modules
+### Manage Modules
 
 ```bash
 # List all modules
-make mod@list
+make list
 
-# EnableModule
-make mod@enable name=my-module
+# Enable a module
+make enable name=my-module
 
 # View module information
-make mod@info name=my-module
-
-# Install（containsDependencyInstall）
-make install
+make info name=my-module
 ```

@@ -14,6 +14,7 @@ MODULES_DIR="$PROJECT_ROOT/modules"
 LIB_DIR="$(cd "$SCRIPT_DIR/../lib" && pwd)"
 source "$LIB_DIR/core.lib"
 source "$LIB_DIR/config.lib"
+source "$LIB_DIR/colors.lib"
 i18n_init
 
 # Load core configuration
@@ -39,6 +40,35 @@ get_enabled_modules() {
     grep "^ENABLE_MODULES := " "$modules_config" 2>/dev/null | cut -d= -f2- | sed -e 's/^ *//' -e 's/ *$//' || echo ""
 }
 
+# Print ASCII logo
+print_logo() {
+    echo ""
+    echo "${YELLOW} ___  ___          _ _   ___ _   ${NC}"
+    echo "${YELLOW} |  \\/  |         | | | / (_) |  ${NC}"
+    echo "${YELLOW} | .  . | ___   __| | |/ / _| |_ ${NC}"
+    echo "${YELLOW} | |\\/| |/ _ \\ / _\` |    \\| | __| ${NC}"
+    echo "${YELLOW} | |  | | (_) | (_| | |\\  \\ | |_ ${NC}"
+    echo "${YELLOW} \\_|  |_/\\___/ \\__,_\\_| \\_/_|\\__| ${NC}"
+    echo ""
+}
+
+# Print command list from Makefile
+print_commands() {
+    local makefile_list
+    makefile_list=$(cd "$PROJECT_ROOT" && make -qp 2>/dev/null | grep -E '^[a-zA-Z0-9_-]+:' | sed 's/:.*//' | grep -v '^[._]' | grep -v '^help-' | sort -u)
+    
+    while IFS= read -r target; do
+        # Try to get translation via t_cmd helper, fallback to raw description
+        desc=$(t_cmd "$target")
+        if [[ -z "$desc" ]]; then
+            desc=$(grep -m1 "^${target}:.*##" "$PROJECT_ROOT/Makefile" "$PROJECT_ROOT/module.mk" 2>/dev/null | sed 's/.*## *//' | head -1)
+        fi
+        if [[ -n "$desc" ]]; then
+            printf "  ${GREEN}%-20s${NC} %s\n" "$target" "$desc"
+        fi
+    done <<< "$makefile_list"
+}
+
 # Composer-style print helper
 print_cmd() {
     local name="$1"
@@ -48,44 +78,31 @@ print_cmd() {
 
 # Main function
 main() {
-    echo ""
+    print_logo
     echo "${GREEN}${PROJECT_NAME}${NC}  ${YELLOW}ModKit ${PROJECT_VERSION}${NC}"
     echo ""
-
-    echo "${YELLOW}$(t 'HELP_USAGE')${NC}"
+    
+    echo "$(t 'HELP_USAGE')"
     echo "  $(t 'HELP_USAGE_TEXT')"
     echo ""
-
-    echo "${YELLOW}$(t 'HELP_AVAILABLE_COMMANDS')${NC}"
+    echo "$(t 'HELP_AVAILABLE_COMMANDS')"
     echo ""
-
-    echo "${YELLOW}$(t 'HELP_CORE_COMMANDS')${NC}"
-    print_cmd "help" "$(t 'HELP_HELP')"
+    
+    print_commands
     echo ""
-
+    
     local enabled_modules
     enabled_modules=$(get_enabled_modules)
-
-    # 从配置读取是否显示已启用的模块列表，默认显示
-    local show_enabled="${core_show_enabled_modules:-true}"
-
-    if [[ "$show_enabled" == "true" ]] && [ -n "$enabled_modules" ] && [ "$enabled_modules" != " " ]; then
-        echo "${YELLOW}$(t 'HELP_ENABLED_MODULES')${NC}"
-        for module in $enabled_modules; do
-            echo "  ${GREEN}✓ $module${NC}"
-        done
-        echo ""
-    fi
-
+    
     # Display help for enabled modules
-    if [ -n "$enabled_modules" ] && [ "$enabled_modules" != " " ]; then
+    if [[ -n "$enabled_modules" ]] && [[ "$enabled_modules" != " " ]]; then
         for module in $enabled_modules; do
-            if [ -f "$MODULES_DIR/$module/module.mk" ]; then
+            if [[ -f "$MODULES_DIR/$module/module.mk" ]]; then
                 make -s "help-$module" 2>/dev/null || true
             fi
         done
     fi
-
+    
     echo ""
 }
 

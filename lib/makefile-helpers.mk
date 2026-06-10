@@ -3,17 +3,15 @@
 # ============================================
 
 # Define color codes
-define COLOR_TITLE
-\033[1;33m
-endef
+ESC := \033
+GREEN := $(shell printf "%s[0;32m" "$(ESC)")
+YELLOW := $(shell printf "%s[0;33m" "$(ESC)")
+NC := $(shell printf "%s[0m" "$(ESC)")
 
-define COLOR_CMD
-\033[0;32m
-endef
-
-define COLOR_RESET
-\033[0m
-endef
+# Legacy color names for compatibility
+COLOR_TITLE := $(YELLOW)
+COLOR_CMD := $(GREEN)
+COLOR_RESET := $(NC)
 
 # ============================================
 # Print module help header

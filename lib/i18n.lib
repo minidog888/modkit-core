@@ -22,22 +22,37 @@ DEFAULT_LANG="en"
 # Current language (can be overridden)
 CURRENT_LANG="${DEFAULT_LANG}"
 
-# Load language strings
+# Load language strings from both core and project i18n directories
+# Project i18n overrides core i18n for same keys
 load_language() {
     local lang="$1"
-    local lang_file="${I18N_DIR}/${lang}"
+    local core_lang_file="${I18N_DIR}/${lang}"
+    local project_lang_file="${PROJECT_ROOT:-.}/i18n/${lang}"
     
-    if [[ -f "$lang_file" ]]; then
-        source "$lang_file"
-        CURRENT_LANG="$lang"
-        return 0
-    else
-        # Fallback to English
-        if [[ "$lang" != "$DEFAULT_LANG" ]]; then
-            load_language "$DEFAULT_LANG"
+    # Load core i18n first
+    if [[ -f "$core_lang_file" ]]; then
+        source "$core_lang_file"
+    elif [[ "$lang" != "$DEFAULT_LANG" ]]; then
+        # Fallback to English in core
+        local default_core_lang_file="${I18N_DIR}/${DEFAULT_LANG}"
+        if [[ -f "$default_core_lang_file" ]]; then
+            source "$default_core_lang_file"
         fi
-        return 1
     fi
+    
+    # Load project i18n (overrides core i18n)
+    if [[ -f "$project_lang_file" ]]; then
+        source "$project_lang_file"
+    elif [[ "$lang" != "$DEFAULT_LANG" ]]; then
+        # Fallback to English in project
+        local default_project_lang_file="${PROJECT_ROOT:-.}/i18n/${DEFAULT_LANG}"
+        if [[ -f "$default_project_lang_file" ]]; then
+            source "$default_project_lang_file"
+        fi
+    fi
+    
+    CURRENT_LANG="$lang"
+    return 0
 }
 
 # Get language from config
@@ -110,6 +125,30 @@ t() {
         # Fallback to key name without prefix
         echo "$1"
     fi
+}
+
+# Get command help description by command name
+# Maps Makefile target names to HELP_i18n keys
+# Usage: t_cmd "build" -> returns translated help description
+t_cmd() {
+    local cmd="$1"
+    case "$cmd" in
+        help)           t "HELP_HELP_DISPLAY" ;;
+        build)          t "HELP_BUILD" ;;
+        create)         t "HELP_CREATE" ;;
+        create-project) t "HELP_CREATE_PROJECT" ;;
+        dependencies)   t "HELP_DEPENDENCIES" ;;
+        dev-dependencies) t "HELP_DEV_DEPENDENCIES" ;;
+        disable)        t "HELP_DISABLE" ;;
+        enable)         t "HELP_ENABLE" ;;
+        info)           t "HELP_INFO" ;;
+        install)        t "HELP_INSTALL" ;;
+        install-deps)   t "HELP_INSTALL_DEPS" ;;
+        list)           t "HELP_LS" ;;
+        mod-install)    t "HELP_MOD_INSTALL" ;;
+        publish)        t "HELP_PUBLISH" ;;
+        *)              echo "" ;;
+    esac
 }
 
 # Quick translation functions
